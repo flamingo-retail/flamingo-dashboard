@@ -17,6 +17,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#F1F5F9}
 .refresh-btn.spinning .icon{display:inline-block;animation:spin .7s linear infinite}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .hd-date{font-size:11px;color:#475569}
+.daterow{display:flex;gap:8px;margin-top:12px;align-items:flex-end}
+.datefld{flex:1}
+.datefld label{display:block;font-size:9px;color:#64748B;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.datefld input{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #334155;background:#1E293B;color:#fff;font-size:13px;outline:none;font-family:inherit}
+.datefld input:focus{border-color:#38BDF8}
+.dateapply{padding:8px 14px;border-radius:8px;border:none;background:#38BDF8;color:#0F172A;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;height:35px}
+.dateapply:hover{background:#0EA5E9}
+.dateapply:active{transform:scale(0.96)}
+.presets{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.preset{font-size:11px;padding:4px 10px;border-radius:14px;border:1px solid #334155;background:transparent;color:#94A3B8;cursor:pointer}
+.preset:hover{background:#1E293B;color:#fff}
+.preset.on{background:#1E293B;color:#fff;border-color:#38BDF8}
 .kpis{display:flex;gap:8px;margin-top:12px}
 .kpi{flex:1;background:#1E293B;border-radius:10px;padding:10px 12px}
 .kpi-l{font-size:9px;color:#64748B;text-transform:uppercase;letter-spacing:1px}
@@ -83,6 +95,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#F1F5F9}
     </button>
   </div>
   <div class="hd-date" id="hd-date">Chargement...</div>
+
+  <div class="daterow">
+    <div class="datefld">
+      <label>Du</label>
+      <input type="date" id="date-from">
+    </div>
+    <div class="datefld">
+      <label>Au</label>
+      <input type="date" id="date-to">
+    </div>
+    <button class="dateapply" onclick="applyDates()">Appliquer</button>
+  </div>
+  <div class="presets">
+    <button class="preset" data-preset="month" onclick="setPreset('month')">Ce mois</button>
+    <button class="preset" data-preset="lastmonth" onclick="setPreset('lastmonth')">Mois dernier</button>
+    <button class="preset" data-preset="week" onclick="setPreset('week')">7 jours</button>
+    <button class="preset" data-preset="year" onclick="setPreset('year')">Cette année</button>
+  </div>
+
   <div class="kpis">
     <div class="kpi"><div class="kpi-l">Unités</div><div class="kpi-v" style="color:#38BDF8" id="kq">-</div></div>
     <div class="kpi"><div class="kpi-l">CA HT</div><div class="kpi-v" style="color:#4ADE80;font-size:16px" id="kh">-</div></div>
@@ -106,15 +137,53 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#F1F5F9}
   <select id="ss" onchange="render()"><option value="qty">Trier : Qté vendue</option><option value="total_ht">Trier : CA HT</option></select>
   <select id="fs" onchange="render()"><option value="all">Tous fournisseurs</option></select>
 </div>
+
 <div class="lst" id="lst"><div class="loading">Chargement des données...</div></div>
 
 <script>
 var PALETTE={"oraije":"#2563EB","poheme":"#7C3AED","in april 1986":"#DB2777","ycoo":"#059669","kilky":"#D97706","lili lala":"#0891B2","mère & fille":"#DC2626","feelkoo":"#9333EA","loevia":"#EA580C","little april":"#65A30D","peace love":"#F59E0B","maroc":"#92400E","valentin valentine bijoux":"#BE185D","jack & jones":"#1D4ED8","it hippie":"#9333EA","season":"#475569"};
 function cl(f){return PALETTE[(f||'').toLowerCase()]||"#6B7280";}
 function fm(n){return (n||0).toLocaleString("fr-FR",{minimumFractionDigits:0,maximumFractionDigits:0})+"€";}
+function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
 var tab="refs", exp=null, expCol=null, store="all";
 var D=[];
+var curFrom=null, curTo=null;
+
+function initDates(){
+  var today=new Date();
+  curFrom = ymd(new Date(today.getFullYear(), today.getMonth(), 1));
+  curTo   = ymd(today);
+  document.getElementById('date-from').value = curFrom;
+  document.getElementById('date-to').value   = curTo;
+  markPreset('month');
+}
+function setPreset(p){
+  var today=new Date(), from, to=ymd(today);
+  if(p==='month'){ from=ymd(new Date(today.getFullYear(),today.getMonth(),1)); }
+  else if(p==='lastmonth'){ from=ymd(new Date(today.getFullYear(),today.getMonth()-1,1)); to=ymd(new Date(today.getFullYear(),today.getMonth(),0)); }
+  else if(p==='week'){ var w=new Date(today); w.setDate(w.getDate()-6); from=ymd(w); }
+  else if(p==='year'){ from=ymd(new Date(today.getFullYear(),0,1)); }
+  document.getElementById('date-from').value=from;
+  document.getElementById('date-to').value=to;
+  curFrom=from; curTo=to;
+  markPreset(p);
+  loadData();
+}
+function markPreset(p){
+  document.querySelectorAll('.preset').forEach(function(b){
+    b.className='preset'+(b.dataset.preset===p?' on':'');
+  });
+}
+function applyDates(){
+  var f=document.getElementById('date-from').value;
+  var t=document.getElementById('date-to').value;
+  if(!f||!t){ return; }
+  if(f>t){ return; }
+  curFrom=f; curTo=t;
+  markPreset(null);
+  loadData();
+}
 
 function refresh(){
   var btn=document.getElementById('refresh-btn');
@@ -129,18 +198,15 @@ function refresh(){
 async function loadData(){
   document.getElementById('lst').innerHTML='<div class="loading">Chargement des données...</div>';
   try {
-    var today = new Date();
-    var from = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-01';
-    var to   = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-
-    var url = '/.netlify/functions/shopcaisse?store='+store+'&from='+from+'&to='+to;
-    var res = await fetch(url);
+    var from = curFrom, to = curTo;
+    var url  = '/.netlify/functions/shopcaisse?store='+store+'&from='+from+'&to='+to;
+    var res  = await fetch(url);
     var json = await res.json();
 
-    if(json && json.data && Array.isArray(json.data)){
+    if(json && json.data && Array.isArray(json.data) && json.data.length>0){
       D = json.data;
       var lastUpdate = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-      document.getElementById('hd-date').textContent = json.from + ' → ' + json.to + ' · Mis à jour à ' + lastUpdate;
+      document.getElementById('hd-date').textContent = json.from+' → '+json.to+' · Mis à jour à '+lastUpdate;
 
       var seen={}, s=document.getElementById("fs");
       s.innerHTML='<option value="all">Tous fournisseurs</option>';
@@ -148,10 +214,10 @@ async function loadData(){
         var f=d.fournisseur||'';
         if(f && !seen[f]){seen[f]=1;var o=document.createElement('option');o.value=f;o.textContent=f;s.appendChild(o);}
       });
-
       render();
     } else {
-      document.getElementById('lst').innerHTML='<div class="err">Réponse inattendue :<br><small>'+JSON.stringify(json).substring(0,300)+'</small></div>';
+      D=[]; render();
+      document.getElementById('lst').innerHTML='<div class="err">Aucune vente sur cette période.</div>';
     }
   } catch(e) {
     document.getElementById('lst').innerHTML='<div class="err">Erreur de connexion :<br>'+e.message+'</div>';
@@ -230,6 +296,7 @@ function render(){
   }).join("");
 }
 
+initDates();
 loadData();
 </script>
 </body>
