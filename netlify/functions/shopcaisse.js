@@ -14,6 +14,7 @@ exports.handler = async function(event) {
   const dateFrom = event.queryStringParameters?.from || new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
   const dateTo   = event.queryStringParameters?.to   || now.toISOString().split('T')[0];
 
+  // Récupère les ventes d'un magasin — retourne les items bruts
   async function fetchSales(storeId) {
     return new Promise((resolve) => {
       const path = `/v1/stores/${storeId}/sales?limit=500&date_from=${dateFrom}T00:00:00&date_to=${dateTo}T23:59:59`;
@@ -25,6 +26,7 @@ exports.handler = async function(event) {
           'Accept':        'application/json',
         },
       }, (res) => {
+        // Forcer le décodage UTF-8
         res.setEncoding('utf8');
         let data = '';
         res.on('data', chunk => data += chunk);
@@ -42,6 +44,7 @@ exports.handler = async function(event) {
     });
   }
 
+  // Collecte les ventes des magasins demandés
   let sales = [];
   if (store === 'lf'  || store === 'all') {
     const lf  = await fetchSales(STORE_LF);
@@ -52,19 +55,24 @@ exports.handler = async function(event) {
     sales = sales.concat(stm.map(s => ({ ...s, store: 'STM' })));
   }
 
+  // Agrégation par référence produit (nom de base, sans taille/couleur)
   const byProduct = {};
 
   for (const sale of sales) {
     if (!sale.lines) continue;
     for (const line of sale.lines) {
+      // Nom brut : préférer item.name, sinon description, sinon label
       const rawName = line.item?.name || line.item?.label || line.description || line.label || 'Inconnu';
 
+      // Extraire le nom de base : supprimer la taille finale (ex: "Noir 36", "Bleu S", "38 M …")
+      // et normaliser les espaces
       const baseName = rawName
-        .replace(/\s+\d{1,3}\s*[A-Z]{0,3}$/, '')
-        .replace(/\s+(XS|S|M|L|XL|XXL|XXXL)\s*$/, '')
-        .replace(/\s+TU\s*$/, '')
+        .replace(/\s+\d{1,3}\s*[A-Z]{0,3}$/, '')   // taille numérique + lettre optionnelle en fin
+        .replace(/\s+(XS|S|M|L|XL|XXL|XXXL)\s*$/, '') // taille texte seule en fin
+        .replace(/\s+TU\s*$/, '')                     // TU (Taille Unique)
         .trim();
 
+      // Prix HT : chercher dans plusieurs champs possibles de ShopCaisse
       const unitPrice = line.price?.vatExcluded
         ?? line.unitPriceExcludingTax
         ?? line.unitPrice
@@ -76,7 +84,10 @@ exports.handler = async function(event) {
       const ht  = unitPrice * qty;
       const ttc = (line.unitPrice ?? line.price?.vatIncluded ?? unitPrice) * qty;
 
-      const couleur     = line.item?.color || line.color || line.variant?.color || '';
+      // Couleur
+      const couleur = line.item?.color || line.color || line.variant?.color || '';
+
+      // Fournisseur (souvent vide depuis l'API)
       const fournisseur = line.item?.supplier || line.supplier || '';
 
       if (!byProduct[baseName]) {
@@ -94,6 +105,7 @@ exports.handler = async function(event) {
       byProduct[baseName].total_ht  += ht;
       byProduct[baseName].total_ttc += ttc;
 
+      // Agrégation par couleur
       const clé = couleur || 'Sans couleur';
       if (!byProduct[baseName].couleurs[clé]) {
         byProduct[baseName].couleurs[clé] = { couleur: clé, qty: 0, total_ht: 0, tailles: [] };
@@ -103,6 +115,7 @@ exports.handler = async function(event) {
     }
   }
 
+  // Formatage final
   const result = Object.values(byProduct)
     .map(p => ({
       ...p,
