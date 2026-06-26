@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Flamingo Top Ventes</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#F1F5F9}
+.hd{background:#0F172A;padding:20px 16px 16px;color:#fff;position:sticky;top:0;z-index:100}
+.hd-sub{font-size:11px;color:#64748B;letter-spacing:1.5px;text-transform:uppercase}
+.hd-title{font-size:20px;font-weight:800;margin:2px 0 4px}
+.hd-date{font-size:11px;color:#475569}
+.kpis{display:flex;gap:8px;margin-top:12px}
+.kpi{flex:1;background:#1E293B;border-radius:10px;padding:10px 12px}
+.kpi-l{font-size:9px;color:#64748B;text-transform:uppercase;letter-spacing:1px}
+.kpi-v{font-size:20px;font-weight:800;margin-top:2px}
+.tabs{display:flex;background:#fff;border-bottom:1px solid #E2E8F0}
+.tab{flex:1;padding:11px 0;border:none;background:none;cursor:pointer;font-size:13px;color:#94A3B8;border-bottom:2px solid transparent}
+.tab.on{font-weight:700;color:#0F172A;border-bottom-color:#0F172A}
+.search-wrap{padding:10px 12px 0;position:relative}
+.search-input{width:100%;padding:10px 14px 10px 36px;border-radius:10px;border:1px solid #E2E8F0;font-size:14px;background:#fff;color:#0F172A;outline:none}
+.search-input:focus{border-color:#0F172A}
+.search-icon{position:absolute;left:24px;top:50%;transform:translateY(-50%);color:#94A3B8;font-size:14px}
+.ctrl{padding:12px 12px 0;display:flex;gap:8px}
+.ctrl select{flex:1;padding:8px 10px;border-radius:8px;border:1px solid #E2E8F0;font-size:13px;background:#fff;color:#0F172A}
+.lst{padding:10px 12px 40px}
+.card{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1.5px solid #E2E8F0;cursor:pointer}
+.cm{display:flex;align-items:flex-start;gap:10px}
+.rk{font-size:16px;font-weight:800;min-width:26px;padding-top:2px;color:#CBD5E1}
+.rkg{color:#F59E0B}
+.cb{flex:1;min-width:0}
+.cn{font-weight:600;font-size:13px;color:#0F172A;line-height:1.3}
+.tgs{display:flex;gap:5px;margin-top:4px;flex-wrap:wrap}
+.tg{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600}
+.tgsz{background:#F1F5F9;color:#64748B;font-weight:400}
+.bw{margin-top:7px;background:#F1F5F9;border-radius:4px;height:5px}
+.b{height:100%;border-radius:4px}
+.cv{text-align:right;flex-shrink:0}
+.cq{font-size:16px;font-weight:800;color:#0F172A}
+.cqs{font-size:11px;font-weight:400;color:#94A3B8}
+.ch{font-size:12px;font-weight:600;color:#059669}
+.ca{font-size:9px;color:#CBD5E1;margin-top:2px}
+.det{margin-top:10px;padding-top:10px;border-top:1px solid #F1F5F9}
+.det-l{font-size:9px;color:#94A3B8;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
+.col-block{cursor:pointer;padding:4px 0;border-bottom:1px solid #F8FAFC}
+.col-name{font-size:11px;font-weight:700;color:#374151;margin-bottom:2px;display:flex;justify-content:space-between}
+.col-badge{font-size:10px;color:#64748B;font-weight:400}
+.col-bw{background:#F1F5F9;border-radius:3px;height:4px;margin:3px 0}
+.col-b{height:100%;border-radius:3px}
+.dr{display:flex;align-items:center;margin-bottom:4px;gap:6px;padding-left:8px}
+.dn{flex:1;font-size:10px;color:#64748B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dbw{width:40px;background:#F1F5F9;border-radius:3px;height:3px;flex-shrink:0}
+.db{height:100%;border-radius:3px}
+.dv{font-weight:700;font-size:11px;color:#0F172A;white-space:nowrap}
+.fc{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E2E8F0;display:flex;align-items:center;gap:10px}
+.fst-s{width:4px;height:44px;border-radius:2px;flex-shrink:0}
+.fb{flex:1}
+.fn{font-weight:700;font-size:13px;color:#0F172A}
+.fst{font-size:11px;color:#64748B;margin-top:2px}
+.fbw{margin-top:5px;background:#F1F5F9;border-radius:4px;height:5px}
+.frk{font-size:18px;font-weight:800;flex-shrink:0}
+.loading{text-align:center;padding:40px;color:#64748B;font-size:14px}
+.store-btn{flex:1;padding:8px;border-radius:8px;border:1.5px solid #E2E8F0;background:#fff;font-size:12px;font-weight:600;color:#64748B;cursor:pointer;text-align:center}
+.store-btn.on{border-color:#0F172A;color:#0F172A;background:#F8FAFC}
+.store-row{padding:10px 12px 0;display:flex;gap:8px}
+</style>
+</head>
+<body>
+<div class="hd">
+  <div class="hd-sub">Flamingo · Dashboard</div>
+  <div class="hd-title">Top Ventes</div>
+  <div class="hd-date" id="hd-date">Chargement...</div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-l">Unités</div><div class="kpi-v" style="color:#38BDF8" id="kq">-</div></div>
+    <div class="kpi"><div class="kpi-l">CA HT</div><div class="kpi-v" style="color:#4ADE80;font-size:16px" id="kh">-</div></div>
+    <div class="kpi"><div class="kpi-l">Réfs</div><div class="kpi-v" style="color:#F472B6" id="kr">-</div></div>
+  </div>
+</div>
+<div class="store-row">
+  <button class="store-btn on" id="btn-all" onclick="setStore('all')">Tous</button>
+  <button class="store-btn" id="btn-lf" onclick="setStore('lf')">La Flotte</button>
+  <button class="store-btn" id="btn-stm" onclick="setStore('stm')">STM & OLE</button>
+</div>
+<div class="tabs">
+  <button class="tab on" id="tr" onclick="sw('refs')">Par référence</button>
+  <button class="tab" id="tf" onclick="sw('four')">Par fournisseur</button>
+</div>
+<div class="search-wrap">
+  <span class="search-icon">🔍</span>
+  <input class="search-input" id="si" type="text" placeholder="Rechercher..." oninput="render()" autocomplete="off" autocorrect="off" autocapitalize="off">
+</div>
+<div class="ctrl">
+  <select id="ss" onchange="render()"><option value="qty">Trier : Qté vendue</option><option value="total_ht">Trier : CA HT</option></select>
+  <select id="fs" onchange="render()"><option value="all">Tous fournisseurs</option></select>
+</div>
+<div class="lst" id="lst"><div class="loading">Chargement des données...</div></div>
+
+<script>
+var C={"oraije":"#2563EB","poheme":"#7C3AED","in april 1986":"#DB2777","ycoo":"#059669","kilky":"#D97706","lili lala":"#0891B2","Mère & fille":"#DC2626","FEELKOO":"#9333EA","LOEVIA":"#EA580C","Little April":"#65A30D","Peace Love":"#F59E0B","Maroc":"#92400E","VALENTIN VALENTINE BIJOUX":"#BE185D","Pas de fournisseur":"#6B7280","Jack & Jones":"#1D4ED8","It Hippie":"#9333EA","Season":"#475569"};
+function cl(f){return C[f]||"#6B7280";}
+function fm(n){return n.toLocaleString("fr-FR",{minimumFractionDigits:0,maximumFractionDigits:0})+"€";}
+var tab="refs",exp=null,expCol=null,store="all";
+var DATA_LF=[],DATA_STM=[],D=[];
+
+async function loadData(){
+  try {
+    // Fetch today's sales from ShopCaisse API
+    var today = new Date();
+    var from = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+    var to = today.toISOString().split('T')[0];
+    
+    var res = await fetch('/.netlify/functions/shopcaisse?path=/v1/receipts/items?date_from='+from+'%2000:00:00&date_to='+to+'%2023:59:59&limit=500');
+    var json = await res.json();
+    
+    if(json && json.data) {
+      processAPIData(json.data, from, to);
+    } else {
+      document.getElementById('lst').innerHTML = '<div class="loading">Erreur: '+JSON.stringify(json)+'</div>';
+    }
+  } catch(e) {
+    document.getElementById('lst').innerHTML = '<div class="loading">Erreur de connexion: '+e.message+'</div>';
+  }
+}
+
+function processAPIData(items, from, to) {
+  // Group by product reference
+  var byRef = {};
+  items.forEach(function(item) {
+    var name = item.product_name || item.name || 'Inconnu';
+    var key = name;
+    if(!byRef[key]) byRef[key] = {ref:key, qty:0, total_ht:0, total_ttc:0, fournisseur:'', couleurs:{}, famille:''};
+    byRef[key].qty += (item.quantity || 1);
+    byRef[key].total_ht += (item.unit_price_excluding_tax || 0) * (item.quantity || 1);
+    byRef[key].total_ttc += (item.unit_price || 0) * (item.quantity || 1);
+  });
+  
+  D = Object.values(byRef).sort(function(a,b){return b.qty-a.qty;}).map(function(r){
+    r.total_ht = Math.round(r.total_ht*100)/100;
+    r.total_ttc = Math.round(r.total_ttc*100)/100;
+    r.couleurs = [{couleur:'Sans couleur', qty:r.qty, total_ht:r.total_ht, tailles:[]}];
+    return r;
+  });
+  
+  document.getElementById('hd-date').textContent = from + ' → ' + to + ' · Données en temps réel';
+  
+  // Populate fournisseur filter
+  var seen={},s=document.getElementById("fs");
+  s.innerHTML = '<option value="all">Tous fournisseurs</option>';
+  
+  render();
+}
+
+function setStore(s){
+  store=s;
+  ['all','lf','stm'].forEach(function(id){
+    document.getElementById('btn-'+id).className='store-btn'+(store===id?' on':'');
+  });
+  render();
+}
+
+function sw(t){tab=t;exp=null;expCol=null;document.getElementById("tr").className="tab"+(t==="refs"?" on":"");document.getElementById("tf").className="tab"+(t==="four"?" on":"");render();}
+function tg(i){exp=exp===i?null:i;expCol=null;render();}
+function tgCol(id){expCol=expCol===id?null:id;render();}
+
+function gf(){
+  var f=document.getElementById("fs").value,k=document.getElementById("ss").value;
+  var q=document.getElementById("si").value.trim().toLowerCase();
+  var d=f==="all"?D:D.filter(function(x){return x.fournisseur===f;});
+  if(q){d=d.filter(function(x){return x.ref.toLowerCase().indexOf(q)>=0;});}
+  return d.slice().sort(function(a,b){return b[k]-a[k];});
+}
+
+function render(){
+  var fd=gf();
+  document.getElementById("kq").textContent=fd.reduce(function(s,d){return s+d.qty;},0);
+  document.getElementById("kh").textContent=fm(fd.reduce(function(s,d){return s+d.total_ht;},0));
+  document.getElementById("kr").textContent=fd.length;
+  var lst=document.getElementById("lst");
+  if(tab==="four"){
+    var mp={};fd.forEach(function(d){if(!mp[d.fournisseur])mp[d.fournisseur]={f:d.fournisseur,q:0,h:0};mp[d.fournisseur].q+=d.qty;mp[d.fournisseur].h+=d.total_ht;});
+    var fs=Object.values(mp).sort(function(a,b){return b.q-a.q;});var mx=fs[0]?fs[0].q:1;
+    lst.innerHTML=fs.map(function(f,i){var c=cl(f.f);return "<div class=\"fc\"><div class=\"fst-s\" style=\"background:"+c+"\"></div><div class=\"fb\"><div class=\"fn\">"+f.f.toUpperCase()+"</div><div class=\"fst\">"+f.q+" u · "+fm(f.h)+"</div><div class=\"fbw\"><div class=\"b\" style=\"width:"+Math.round(f.q/mx*100)+"%;background:"+c+"\"></div></div></div><div class=\"frk\" style=\"color:"+c+"\">#"+(i+1)+"</div></div>";}).join("");
+    return;
+  }
+  var k=document.getElementById("ss").value,mx=fd[0]?fd[0][k]:1;
+  lst.innerHTML=fd.map(function(item,i){
+    var isO=exp===i,c=cl(item.fournisseur),bw=Math.round(item[k]/mx*100);
+    var det="";
+    if(isO&&item.couleurs){
+      var mc=item.couleurs[0]?item.couleurs[0].qty:1;
+      det="<div class=\"det\"><div class=\"det-l\">Détail</div>"+item.couleurs.map(function(col,ci){
+        var colId="c"+i+"-"+ci,isColOpen=expCol===colId,mt=col.tailles[0]?col.tailles[0].qty:1,cb=Math.round(col.qty/mc*100);
+        var td=isColOpen?col.tailles.map(function(t){return "<div class=\"dr\"><div class=\"dn\">"+t.nom+"</div><div class=\"dbw\"><div class=\"db\" style=\"width:"+Math.round(t.qty/mt*100)+"%;background:"+c+"66\"></div></div><div class=\"dv\">"+t.qty+"u</div></div>";}).join(""):"";
+        return "<div class=\"col-block\" onclick=\"event.stopPropagation();tgCol('"+colId+"')\"><div class=\"col-name\"><span>"+col.couleur+"</span><span class=\"col-badge\">"+col.qty+" u · "+fm(col.total_ht)+(col.tailles.length>1?(isColOpen?" ▲":" ▼"):"")+"</span></div><div class=\"col-bw\"><div class=\"col-b\" style=\"width:"+cb+"%;background:"+c+"\"></div></div>"+td+"</div>";
+      }).join("")+"</div>";
+    }
+    var rkc="rk"+(i<3?" rkg":""),nc=item.couleurs?item.couleurs.length:0;
+    return "<div class=\"card\" style=\"border-color:"+(isO?c:"#E2E8F0")+"\" onclick=\"tg("+i+")\"><div class=\"cm\"><div class=\""+rkc+"\">"+(i+1)+"</div><div class=\"cb\"><div class=\"cn\">"+item.ref+"</div><div class=\"tgs\"><span class=\"tg\" style=\"background:"+c+"18;color:"+c+"\">"+item.fournisseur.toUpperCase()+"</span>"+(nc>1?"<span class=\"tg tgsz\">"+nc+" couleurs</span>":"")+"</div><div class=\"bw\"><div class=\"b\" style=\"width:"+bw+"%;background:"+c+"\"></div></div></div><div class=\"cv\"><div class=\"cq\">"+item.qty+"<span class=\"cqs\"> u.</span></div><div class=\"ch\">"+fm(item.total_ht)+"</div><div class=\"ca\">"+(isO?"▲":"▼")+"</div></div></div>"+det+"</div>";
+  }).join("");
+}
+
+loadData();
+</script>
+</body>
+</html>
