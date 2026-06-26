@@ -7,7 +7,7 @@ exports.handler = async function(event) {
   }
 
   const path = event.queryStringParameters?.path || '/v1/company';
-  const url = 'https://api.shopcaisse.fr' + path;
+  const url = 'https://api.shop-caisse.com' + path;
 
   return new Promise((resolve) => {
     const req = https.request(url, {
