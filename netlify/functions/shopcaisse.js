@@ -47,11 +47,11 @@ exports.handler = async function(event) {
   // Collecte les ventes des magasins demandés
   let sales = [];
   if (store === 'lf'  || store === 'all') {
-    const lf  = await fetchSales(STORE_LF);
+    const lf  = await fetchSales('f95fc2ba-ac61-45f8-877e-255f48e5c88d');
     sales = sales.concat(lf.map(s => ({ ...s, store: 'LF' })));
   }
   if (store === 'stm' || store === 'all') {
-    const stm = await fetchSales(STORE_STM);
+    const stm = await fetchSales('f95fc2ba-ac61-45f8-877e-255f48e5c88d');
     sales = sales.concat(stm.map(s => ({ ...s, store: 'STM' })));
   }
 
